@@ -1,6 +1,6 @@
 /* === Imports === */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
-import { getFirestore, collection, addDoc, updateDoc, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, updateDoc, serverTimestamp, onSnapshot, query, where, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
 import {    getAuth, 
             createUserWithEmailAndPassword, 
             signInWithEmailAndPassword,
@@ -55,7 +55,7 @@ const postButtonEl = document.getElementById('post-btn');
 const moodEmojiEls = document.getElementsByClassName('mood-emoji-btn');
 
 const postsEl = document.getElementById('posts');
-const fetchPostsButtonEl = document.getElementById('fetch-posts-btn');
+//const fetchPostsButtonEl = document.getElementById('fetch-posts-btn');
 
 /* == UI - Event Listeners == */
 
@@ -71,10 +71,13 @@ for (let moodEmojiEl of moodEmojiEls) {
 }
 
 postButtonEl.addEventListener("click", postButtonPressed)
-fetchPostsButtonEl.addEventListener("click", fetchOnceAndRenderPostsFromDB)
+//fetchPostsButtonEl.addEventListener("click", fetchOnceAndRenderPostsFromDB)
 
 /* === State === */
 let moodState = 0;
+
+/* === Global Constants */
+let collectionName = 'posts'
 
 /* === Main Code === */
 
@@ -83,6 +86,7 @@ onAuthStateChanged(auth, (user) => {
         showLoggedInView()
         showProfilePicture(userProfilePictureEl, user)
         showUserGreeting(userGreetingEl, user)
+        fetchInRealTimeAndRenderPostsFromDB(user)
     } else {
         showLoggedOutView()
     }
@@ -152,7 +156,7 @@ function authUpdateProfile() {
 
 async function addPostToDB(postBody, user) {
     try {
-        const documentID = await addDoc(collection(db, "posts"), {
+        const documentID = await addDoc(collection(db, collectionName), {
           body: postBody,
           uid: user.uid,
           createdAt:serverTimestamp(),
@@ -165,6 +169,9 @@ async function addPostToDB(postBody, user) {
 }
 
 function displayDate(firebaseDate) {
+    if(!firebaseDate) {
+        return "Date processing..."
+    }
     const date = firebaseDate.toDate();
     const day = date.getDate()
     const year = date.getFullYear()
@@ -178,13 +185,28 @@ function displayDate(firebaseDate) {
     return `${day} ${months} ${year} - ${hours}:${minutes}`
 }
 
-async function fetchOnceAndRenderPostsFromDB() {
+/* async function fetchOnceAndRenderPostsFromDB() {
     const querySnapshot = await getDocs(collection(db, "posts"));
     clearAll(postsEl)
     querySnapshot.forEach((doc) => {
-      //console.log(`${doc.id}: ${doc.data().body}`);
+      console.log(`${doc.id}: ${doc.data().body}`);
       renderPost(postsEl, doc.data())
     });
+} */
+
+function fetchInRealTimeAndRenderPostsFromDB(user) {
+    const postsRef = collection(db, collectionName)
+
+    
+
+    const q = query(postsRef, where('uid', '==', user.uid), orderBy('createdAt', 'desc'))
+    onSnapshot(q, (querySnapshot) => {
+        clearAll(postsEl)
+        querySnapshot.forEach((doc) => {
+            renderPost(postsEl, doc.data())
+           //console.log(doc.data())
+        })
+    })
 }
 
 function renderPost(postsEl, postData) {
@@ -196,13 +218,16 @@ function renderPost(postsEl, postData) {
                 <img src="assets/emojis/${postData.mood}.png">
             </div>
             <p>
-                ${postData.body}
+                ${replaceNewlinesWithBrTags(postData.body)}
             </p>
         </div>
     `
 }
 
 /* == Functions - UI Functions == */
+function replaceNewlinesWithBrTags(inputString) {
+    return inputString.replace(/\n/g, "<br>")
+}
 
 function postButtonPressed() {
     const postBody = textareaEl.value;

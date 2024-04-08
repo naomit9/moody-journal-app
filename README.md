@@ -7,7 +7,7 @@ A private mood journal app for your personal thoughts and feelings.
 * HTML
 * CSS
 * Vanilla JavaScript
-* Firebase for Authentication and Cloud Firestore
+* Firebase for Authentication Cloud Firestore
 
 ## Features:
 * Email and password auth 
@@ -16,3 +16,5 @@ A private mood journal app for your personal thoughts and feelings.
 * Updating data in realtime
 * Authentication
 * Google auth
+* Security Rules for authenticated users to read and write their own posts
+* Use Queries to fetch posts specifically from the user that logged in and to filter posts by date
