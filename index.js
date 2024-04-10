@@ -57,6 +57,10 @@ const moodEmojiEls = document.getElementsByClassName('mood-emoji-btn');
 const postsEl = document.getElementById('posts');
 //const fetchPostsButtonEl = document.getElementById('fetch-posts-btn');
 
+const allFilterButtonEl = document.getElementById("all-filter-btn")
+
+const filterButtonEls = document.getElementsByClassName("filter-btn")
+
 /* == UI - Event Listeners == */
 
 signInWithGoogleButtonEl.addEventListener("click", authSignInWithGoogle)
@@ -68,6 +72,10 @@ createAccountButtonEl.addEventListener("click", authCreateAccountWithEmail)
 
 for (let moodEmojiEl of moodEmojiEls) {
     moodEmojiEl.addEventListener("click", selectMood)
+}
+
+for (let filterButtonEl of filterButtonEls) {
+    filterButtonEl.addEventListener("click", selectFilter)
 }
 
 postButtonEl.addEventListener("click", postButtonPressed)
@@ -326,4 +334,11 @@ function resetAllMoodElements(allMoodElements) {
 
 function returnMoodValueFromElementId(elementId) {
     return Number(elementId.slice(5))
+}
+
+function selectFilter(event) {
+    const user = auth.currentUser
+    const selectedFilterElementId = event.target.id
+    const selectedFilterPeriod = selectedFilterElementId.split('-')[0]
+    const selectedFilterElement = document.getElementById(selectedFilterElementId)
 }
