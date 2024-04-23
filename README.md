@@ -3,6 +3,11 @@
 # Moody
 A private mood journal app for your personal thoughts and feelings.
 
+## Log in information
+**Username**: moody@demo.com
+
+**Password**: moody123
+
 ## Technologies:
 * HTML
 * CSS

@@ -94,7 +94,7 @@ onAuthStateChanged(auth, (user) => {
         showLoggedInView()
         showProfilePicture(userProfilePictureEl, user)
         showUserGreeting(userGreetingEl, user)
-        fetchInRealTimeAndRenderPostsFromDB(user)
+        //fetchInRealTimeAndRenderPostsFromDB(user)
     } else {
         showLoggedOutView()
     }
@@ -202,19 +202,43 @@ function displayDate(firebaseDate) {
     });
 } */
 
-function fetchInRealTimeAndRenderPostsFromDB(user) {
-    const postsRef = collection(db, collectionName)
-
-    
-
-    const q = query(postsRef, where('uid', '==', user.uid), orderBy('createdAt', 'desc'))
-    onSnapshot(q, (querySnapshot) => {
+function fetchInRealTimeAndRenderPostsFromDB(query, user) {
+    onSnapshot(query, (querySnapshot) => {
         clearAll(postsEl)
         querySnapshot.forEach((doc) => {
             renderPost(postsEl, doc.data())
            //console.log(doc.data())
         })
     })
+}
+
+function fetchTodayPosts(user) {
+    const startOfDay = new Date()
+    startOfDay.setHours(0, 0, 0, 0)
+
+    const endOfDay = new Date()
+    endOfDay.setHours(23, 59, 59, 999)
+
+    const postsRef = collection(db, collectionName)
+
+    const q = query(postsRef, where('uid', '==', user.uid), 
+                              where ('createdAt', '>=', startOfDay),
+                              where ('createdAt', '<=', endOfDay),
+                              orderBy ('createdAt', 'desc'))
+    fetchInRealTimeAndRenderPostsFromDB(q, user)
+}
+
+
+function fetchWeekPosts(user) {
+    const startOfWeek = new Date()
+    startOfWeek.setHours(0, 0, 0, 0)
+
+    if (startOfWeek.getDate() === 0) {
+        // If today is Sunday, minus 6 to go to the previous Monday
+        startOfWeek.setDate(startOfWeek.getDate() - 6)
+    } else {
+        startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDate() + 1)
+    }
 }
 
 function renderPost(postsEl, postData) {
@@ -336,9 +360,25 @@ function returnMoodValueFromElementId(elementId) {
     return Number(elementId.slice(5))
 }
 
+function resetAllFilterButtons(allFilterButtons) {
+    for (let filterButtonEl of allFilterButtons) {
+        filterButtonEl.classList.remove('selected-filter')
+    }
+}
+
+function updateFilterButtonStyle(element) {
+    element.classList.add('selected-filter')
+}
+
 function selectFilter(event) {
     const user = auth.currentUser
     const selectedFilterElementId = event.target.id
     const selectedFilterPeriod = selectedFilterElementId.split('-')[0]
     const selectedFilterElement = document.getElementById(selectedFilterElementId)
+
+    resetAllFilterButtons(filterButtonEls)
+
+    updateFilterButtonStyle(selectedFilterElement)
+
+    fetchTodayPosts(user)
 }
